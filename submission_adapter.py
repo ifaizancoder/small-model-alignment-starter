@@ -7,7 +7,7 @@ code itself in this file.
 
 from __future__ import annotations
 import my_implementation as my_impl
-from my_implementation import encode_pair, build_sft_batch
+from my_implementation import encode_pair, build_sft_batch, compute_response_logprobs
 
 
 def build_sft_batch(tokenizer, prompts, responses, max_length):
@@ -20,13 +20,14 @@ def build_sft_batch(tokenizer, prompts, responses, max_length):
 def compute_response_logprobs(model, tokenizer, prompts, responses, max_length):
     """Return one summed response-token log-probability per input row."""
 
-    raise NotImplementedError("Connect this adapter to your log-probability code")
-
+    #raise NotImplementedError("Connect this adapter to your log-probability code")
+    return my_impl.compute_response_logprobs(model, tokenizer, prompts, responses, max_length)
 
 def compute_sft_loss(model, tokenizer, prompts, responses, max_length):
     """Return a scalar response-only SFT loss using either documented reduction."""
 
-    raise NotImplementedError("Connect this adapter to your SFT loss code")
+    #raise NotImplementedError("Connect this adapter to your SFT loss code")
+    return my_impl.compute_sft_loss(model, tokenizer, prompts, responses, max_length)
 
 
 def build_dpo_batch(tokenizer, prompts, chosen_responses, rejected_responses, max_length):

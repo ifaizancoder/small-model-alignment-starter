@@ -31,7 +31,7 @@ def load_hh_triples(tokenizer, n_train, n_val, seed, max_prompt_tokens):
 def load_policy_and_reference_models(sft_path, policy_device, reference_device):
     from transformers import AutoModelForCausalLM
     policy = AutoModelForCausalLM.from_pretrained(sft_path, torch_dtype=torch.float32).to(policy_device)
-    reference_model = AutoModelForCausalLM.from_pretrained(sft_path, torch_dtype=torch.float16).to(reference_device)
+    reference_model = AutoModelForCausalLM.from_pretrained(sft_path, torch_dtype=torch.float32).to(reference_device)
     reference_model.eval()  # reference model is frozen
     for param in reference_model.parameters():
         param.requires_grad = False
@@ -91,18 +91,18 @@ def pick_devices():
  
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--sft_path", required=True)                  # DPO: start from the SFT best checkpoint
+    p.add_argument("--sft_path", required=True)                
     p.add_argument("--output_dir", default="outputs/dpo_hh")
     p.add_argument("--n_train", type=int, default=15000)
     p.add_argument("--n_val", type=int, default=1000)
     p.add_argument("--context_length", type=int, default=512)
     p.add_argument("--max_prompt_tokens", type=int, default=256)
     p.add_argument("--batch_size", type=int, default=1)
-    p.add_argument("--grad_accum", type=int, default=32)         # 1 x 32 = effective batch 32
+    p.add_argument("--grad_accum", type=int, default=32)         
     p.add_argument("--val_batch_size", type=int, default=2)
     p.add_argument("--epochs", type=int, default=1)
-    p.add_argument("--lr", type=float, default=1e-6)             # DPO: small fixed learning rate
-    p.add_argument("--beta", type=float, default=0.1)            # DPO
+    p.add_argument("--lr", type=float, default=1e-6)           
+    p.add_argument("--beta", type=float, default=0.1)            
     p.add_argument("--weight_decay", type=float, default=0.0)
     p.add_argument("--max_grad_norm", type=float, default=1.0)
     p.add_argument("--eval_interval", type=int, default=50)
@@ -125,7 +125,6 @@ def main():
     metrics_path.write_text("")
  
     tokenizer = AutoTokenizer.from_pretrained(args.sft_path)
-    # DPO: two copies of the SFT model, a trainable policy and a frozen reference
     policy, reference = load_policy_and_reference_models(args.sft_path, policy_device, reference_device)
  
     train_triples, val_triples = load_hh_triples(
@@ -135,10 +134,8 @@ def main():
     train_gen = torch.Generator().manual_seed(args.train_seed)
     train_loader = make_triple_dataloader(train_triples, args.batch_size, shuffle=True, generator=train_gen)
     val_loader = make_triple_dataloader(val_triples, args.val_batch_size, shuffle=False)
- 
-    # DPO: the optimizer only ever sees the policy's weights
     optimizer = torch.optim.AdamW(policy.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    scaler = torch.amp.GradScaler(policy_device.type, enabled=use_amp)
+    scaler = torch.amp.GradScaler(policy_device.type, init_scale = 1024, enabled=use_amp)
  
     steps_per_epoch = math.ceil(len(train_loader) / args.grad_accum)
     num_steps = steps_per_epoch * args.epochs
@@ -149,11 +146,8 @@ def main():
         tokenizer.save_pretrained(out_dir / name)
  
     def write_record(record):
-        with open(metrics_path, "a") as f:             # survives a Kaggle disconnect
+        with open(metrics_path, "a") as f:            
             f.write(json.dumps(record) + "\n")
- 
-    # DPO: sanity check before training. Policy == reference, so expect
-    # accuracy 0, margin 0 and loss log(2) = 0.6931.
     start = time.time()
     val = eval_dpo(policy, reference, tokenizer, val_loader, args.beta, args.context_length, use_amp)
     print(

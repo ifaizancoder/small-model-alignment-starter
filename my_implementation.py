@@ -113,4 +113,18 @@ def split_hh_example(example):
         return None
     return format_prompt(instruction), chosen_response, rejected_response
 
+def split_uf_example(example):
+    chosen, rejected = example["chosen"], example["rejected"]
+    if len(chosen) != 2 or len(rejected) != 2:
+        return None
+    if example["score_chosen"] <= example["score_rejected"]:
+        return None
+    instruction = example["prompt"].strip()
+    chosen_response = chosen[1]["content"].strip()
+    rejected_response = rejected[1]["content"].strip()
+    if not instruction or not chosen_response or not rejected_response:
+        return None
+    if chosen_response == rejected_response:
+        return None
+    return format_prompt(instruction), chosen_response, rejected_response
 

@@ -93,3 +93,24 @@ def compute_dpo_loss(policy_model, reference_model, tokenizer, prompts, chosen_r
     reference_rejected_logps = reference_rejected_logps.to(policy_chosen_logps.device)
     loss = compute_dpo_loss_from_logps(policy_chosen_logps, policy_rejected_logps,reference_chosen_logps, reference_rejected_logps,beta)
     return loss
+
+def split_hh_example(example):
+    chosen, rejected = example["chosen"], example["rejected"]
+    human, assistant = "\n\nHuman:", "\n\nAssistant:"
+    for text in (chosen, rejected):
+        if text.count(human) != 1 or text.count(assistant) != 1:
+            return None
+    chosen_prompt, chosen_response = chosen.split(assistant)
+    rejected_prompt, rejected_response = rejected.split(assistant)
+    if chosen_prompt != rejected_prompt:
+        return None
+    instruction = chosen_prompt.replace(human, "").strip()
+    chosen_response = chosen_response.strip()
+    rejected_response = rejected_response.strip()
+    if not instruction or not chosen_response or not rejected_response:
+        return None
+    if chosen_response == rejected_response:      
+        return None
+    return format_prompt(instruction), chosen_response, rejected_response
+
+

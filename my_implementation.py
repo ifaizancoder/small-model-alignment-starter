@@ -71,3 +71,25 @@ def compute_sft_loss(model, tokenizer, prompts, responses, max_length):
     num_tokens = max((batch["labels"][:, 1:] != -100).sum().item(), 1)
     loss = -total_log_probs / num_tokens
     return loss
+
+def build_dpo_batch(tokenizer, prompts, chosen_responses, rejected_responses, max_length):
+    chosen_batch = build_sft_batch(tokenizer, prompts, chosen_responses, max_length)
+    rejected_batch = build_sft_batch(tokenizer, prompts, rejected_responses, max_length)
+    return {"chosen": chosen_batch, "rejected": rejected_batch}
+
+def compute_dpo_loss_from_logps(policy_chosen_logps, policy_rejected_logps, reference_chosen_logps,reference_rejected_logps,beta):
+    policy_diff = policy_chosen_logps - policy_rejected_logps
+    reference_diff = reference_chosen_logps - reference_rejected_logps
+    loss = -F.logsigmoid(beta * (policy_diff - reference_diff))
+    return loss.mean()
+
+def compute_dpo_loss(policy_model, reference_model, tokenizer, prompts, chosen_responses, rejected_responses, beta, max_length):
+    policy_chosen_logps = compute_response_logprobs(policy_model, tokenizer, prompts, chosen_responses, max_length)
+    policy_rejected_logps = compute_response_logprobs(policy_model, tokenizer, prompts, rejected_responses, max_length)
+    with torch.no_grad():
+        reference_chosen_logps = compute_response_logprobs(reference_model, tokenizer, prompts, chosen_responses, max_length)
+        reference_rejected_logps = compute_response_logprobs(reference_model, tokenizer, prompts, rejected_responses, max_length)
+    reference_chosen_logps = reference_chosen_logps.to(policy_chosen_logps.device)
+    reference_rejected_logps = reference_rejected_logps.to(policy_chosen_logps.device)
+    loss = compute_dpo_loss_from_logps(policy_chosen_logps, policy_rejected_logps,reference_chosen_logps, reference_rejected_logps,beta)
+    return loss

@@ -128,3 +128,26 @@ def split_uf_example(example):
         return None
     return format_prompt(instruction), chosen_response, rejected_response
 
+@torch.inference_mode()
+def generate_responses(model, tokenizer, instructions, max_new_tokens=256, batch_size=8):
+    device = next(model.parameters()).device
+    tokenizer.padding_side = "left"        
+    model.eval()
+    outputs = []
+    for start in range(0, len(instructions), batch_size):
+        chunk = instructions[start:start + batch_size]
+        prompts = [format_prompt(text) for text in chunk]
+        batch = tokenizer(prompts, return_tensors="pt", padding=True, add_special_tokens=False).to(device)
+        generated = model.generate(
+            **batch,
+            max_new_tokens=max_new_tokens,
+            do_sample= False,                   
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+        )
+
+        new_tokens = generated[:, batch["input_ids"].shape[1]:]   
+        texts = tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
+        outputs.extend(text.strip() for text in texts)
+        print(f"{len(outputs)}/{len(instructions)}", flush=True)
+    return outputs

@@ -41,8 +41,7 @@ def main():
     results = []
     for item, response in zip(prompts, responses):
         results.append({
-            "id": item["id"],
-            "instruction": item["instruction"],
+            **item,
             "output": response,
             "generator": args.generator,
             "dataset": args.dataset,

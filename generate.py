@@ -19,7 +19,9 @@ def main():
     p.add_argument("--limit", type=int, default=None)  
     p.add_argument("--repetition_penalty", type=float, default=1.1)
     args = p.parse_args()
-
+    if Path(args.output).exists():
+        print(f"{args.output} already exists, skipping")
+        return
     with open(args.eval_set) as f:
         prompts = json.load(f)
     if args.limit:

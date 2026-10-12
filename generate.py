@@ -14,7 +14,7 @@ def main():
     p.add_argument("--eval_set", default="eval_sets/alpaca_eval_300_seed42.json")
     p.add_argument("--dataset", default="alpaca_eval")
     p.add_argument("--output", required=True)
-    p.add_argument("--max_new_tokens", type=int, default=256)
+    p.add_argument("--max_new_tokens", type=int, default=512)
     p.add_argument("--batch_size", type=int, default=8)
     p.add_argument("--limit", type=int, default=None)  
     p.add_argument("--repetition_penalty", type=float, default=1.1)

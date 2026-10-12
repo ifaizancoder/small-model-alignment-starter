@@ -128,26 +128,43 @@ def split_uf_example(example):
         return None
     return format_prompt(instruction), chosen_response, rejected_response
 
+TEMPLATE_MARKERS = ["\n> Instruction:", "\n> Response:"]
+
+
+def cut_at_template_markers(text):
+    """Keep only the text before the model starts inventing a new template turn."""
+    cut = len(text)
+    for marker in TEMPLATE_MARKERS:
+        position = text.find(marker)
+        if position != -1:
+            cut = min(cut, position)
+    return text[:cut].strip()
+
+
 @torch.inference_mode()
-def generate_responses(model, tokenizer, instructions, max_new_tokens=256, batch_size=8):
+def generate_responses(model, tokenizer, instructions, max_new_tokens=256, batch_size=8,
+                       repetition_penalty=1.1):
     device = next(model.parameters()).device
-    tokenizer.padding_side = "left"        
+    tokenizer.padding_side = "left"
     model.eval()
+
     outputs = []
     for start in range(0, len(instructions), batch_size):
         chunk = instructions[start:start + batch_size]
         prompts = [format_prompt(text) for text in chunk]
+
         batch = tokenizer(prompts, return_tensors="pt", padding=True, add_special_tokens=False).to(device)
         generated = model.generate(
             **batch,
             max_new_tokens=max_new_tokens,
-            do_sample= False,                   
+            do_sample=False,
+            repetition_penalty=repetition_penalty,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
         )
 
-        new_tokens = generated[:, batch["input_ids"].shape[1]:]   
+        new_tokens = generated[:, batch["input_ids"].shape[1]:]
         texts = tokenizer.batch_decode(new_tokens, skip_special_tokens=True)
-        outputs.extend(text.strip() for text in texts)
+        outputs.extend(cut_at_template_markers(text) for text in texts)
         print(f"{len(outputs)}/{len(instructions)}", flush=True)
     return outputs

@@ -16,7 +16,8 @@ def main():
     p.add_argument("--output", required=True)
     p.add_argument("--max_new_tokens", type=int, default=256)
     p.add_argument("--batch_size", type=int, default=8)
-    p.add_argument("--limit", type=int, default=None)  # only the first N prompts, for a pilot
+    p.add_argument("--limit", type=int, default=None)  
+    p.add_argument("--repetition_penalty", type=float, default=1.1)
     args = p.parse_args()
 
     with open(args.eval_set) as f:
@@ -32,6 +33,7 @@ def main():
     responses = generate_responses(
         model, tokenizer, instructions,
         max_new_tokens=args.max_new_tokens, batch_size=args.batch_size,
+        repetition_penalty=args.repetition_penalty
     )
 
     results = []

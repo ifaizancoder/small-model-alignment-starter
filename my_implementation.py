@@ -142,8 +142,8 @@ def cut_at_template_markers(text):
 
 
 @torch.inference_mode()
-def generate_responses(model, tokenizer, instructions, max_new_tokens=256, batch_size=8,
-                       repetition_penalty=1.1):
+def generate_responses(model, tokenizer, instructions, max_new_tokens=512, batch_size=8,
+                       no_repeat_ngram_size=4):
     device = next(model.parameters()).device
     tokenizer.padding_side = "left"
     model.eval()
@@ -158,7 +158,7 @@ def generate_responses(model, tokenizer, instructions, max_new_tokens=256, batch
             **batch,
             max_new_tokens=max_new_tokens,
             do_sample=False,
-            repetition_penalty=repetition_penalty,
+            no_repeat_ngram_size=no_repeat_ngram_size,
             pad_token_id=tokenizer.pad_token_id,
             eos_token_id=tokenizer.eos_token_id,
         )

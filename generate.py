@@ -17,7 +17,7 @@ def main():
     p.add_argument("--max_new_tokens", type=int, default=512)
     p.add_argument("--batch_size", type=int, default=8)
     p.add_argument("--limit", type=int, default=None)  
-    p.add_argument("--repetition_penalty", type=float, default=1.1)
+    p.add_argument("--no_repeat_ngram_size", type=int, default=4)
     args = p.parse_args()
     if Path(args.output).exists():
         print(f"{args.output} already exists, skipping")
@@ -35,7 +35,7 @@ def main():
     responses = generate_responses(
         model, tokenizer, instructions,
         max_new_tokens=args.max_new_tokens, batch_size=args.batch_size,
-        repetition_penalty=args.repetition_penalty
+        no_repeat_ngram_size=args.no_repeat_ngram_size
     )
 
     results = []

@@ -1,0 +1,19 @@
+{
+  "sft_path": "/kaggle/input/notebooks/faizanqaiser231/sft-pa2/small-model-alignment-starter/outputs/sft/best",
+  "output_dir": "outputs/dpo_hh",
+  "n_train": 15000,
+  "n_val": 1000,
+  "context_length": 512,
+  "max_prompt_tokens": 256,
+  "batch_size": 1,
+  "grad_accum": 32,
+  "val_batch_size": 2,
+  "epochs": 1,
+  "lr": 1e-06,
+  "beta": 0.1,
+  "weight_decay": 0.0,
+  "max_grad_norm": 1.0,
+  "eval_interval": 50,
+  "log_interval": 10,
+  "train_seed": 42
+}

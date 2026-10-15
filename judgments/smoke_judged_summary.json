@@ -1,0 +1,17 @@
+{
+  "pairs_file": "eval_pairs/dpo_uf_vs_sft_alpaca_pairs.jsonl",
+  "judge_model": "google/gemini-3.6-flash",
+  "total_pairs": 10,
+  "judged": 10,
+  "failures": 0,
+  "dpo_wins": 0,
+  "sft_wins": 5,
+  "ties": 5,
+  "unknown": 0,
+  "win_rate_with_ties": 0.25,
+  "win_rate_without_ties": 0.0,
+  "judge_picked_position_A": 3,
+  "judge_picked_position_B": 2,
+  "batches_needing_retries": 0,
+  "failure_log_entries": 0
+}

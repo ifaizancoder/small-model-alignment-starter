@@ -1,0 +1,15 @@
+{
+  "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+  "data": "data/persona_lora/ramsay_style_preferences.json",
+  "output_dir": "outputs/lora_dpo",
+  "n_val": 20,
+  "epochs": 3,
+  "lr": 5e-05,
+  "beta": 0.1,
+  "batch_size": 4,
+  "grad_accum": 2,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "seed": 42
+}
